@@ -1,0 +1,1135 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Alexandre Gomes | Backend & Cyber Security Engineer</title>
+  <meta name="description" content="Portfólio de Alexandre - Backend Developer, Pentester e Investigador Digital focado no mercado de Portugal e Europa." />
+
+  <!-- Google Fonts & Tailwind CDN -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,700;0,800;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Three.js para os gráficos e movimentos 3D -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            dark: {
+              950: '#030508',
+              900: '#070a12',
+              850: '#0c111d',
+              800: '#111827',
+              700: '#1f293d',
+              border: 'rgba(0, 255, 157, 0.15)',
+              borderSubtle: 'rgba(255, 255, 255, 0.08)'
+            },
+            hacker: {
+              green: '#00ff9d',
+              greenDim: '#00a365',
+              cyan: '#00f0ff',
+              cyanDim: '#009ba6',
+              purple: '#b347ff',
+              red: '#ff0055',
+              amber: '#ffb703'
+            }
+          },
+          boxShadow: {
+            'neon-green': '0 0 25px -5px rgba(0, 255, 157, 0.35)',
+            'neon-cyan': '0 0 25px -5px rgba(0, 240, 255, 0.35)',
+            'neon-sm': '0 0 10px rgba(0, 255, 157, 0.25)',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Estilos Customizados Hacker & 3D */
+    :root {
+      --hacker-green: #00ff9d;
+      --hacker-cyan: #00f0ff;
+    }
+
+    /* Scrollbar personalizada minimalista */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #030508;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #111827;
+      border-radius: 3px;
+      border: 1px solid rgba(0, 255, 157, 0.3);
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #00ff9d;
+    }
+
+    /* Scanlines retrô hacker (opcional ativável pelo botão HUD) */
+    .crt-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      pointer-events: none;
+      z-index: 9999;
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+      background-size: 100% 3px, 6px 100%;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    .crt-active .crt-overlay {
+      opacity: 0.85;
+    }
+
+    /* Animação do Scanner Biométrico do Avatar */
+    @keyframes scanlineMove {
+      0% { top: 0%; opacity: 0; }
+      15% { opacity: 0.9; }
+      85% { opacity: 0.9; }
+      100% { top: 100%; opacity: 0; }
+    }
+    .scan-line {
+      animation: scanlineMove 3s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    }
+
+    /* Efeito de rotação HUD */
+    @keyframes rotateHUD {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    @keyframes rotateHUDRev {
+      from { transform: rotate(360deg); }
+      to { transform: rotate(0deg); }
+    }
+    .hud-spin {
+      animation: rotateHUD 25s linear infinite;
+    }
+    .hud-spin-reverse {
+      animation: rotateHUDRev 35s linear infinite;
+    }
+
+    /* Efeito Glitch sutil no hover */
+    .glitch-hover:hover {
+      text-shadow: 2px 0 #00ff9d, -2px 0 #00f0ff;
+    }
+
+    /* 3D Tilt Card Container */
+    .tilt-card {
+      transform-style: preserve-3d;
+      transition: transform 0.2s ease-out, border-color 0.3s ease, box-shadow 0.3s ease;
+      will-change: transform;
+    }
+
+    /* Terminal Blinking Cursor */
+    @keyframes cursorBlink {
+      0%, 49% { opacity: 1; }
+      50%, 100% { opacity: 0; }
+    }
+    .term-cursor {
+      display: inline-block;
+      width: 9px;
+      height: 18px;
+      background: #00ff9d;
+      vertical-align: text-bottom;
+      animation: cursorBlink 1s infinite;
+    }
+
+    /* Matrix canvas de fundo */
+    #three-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 0;
+      pointer-events: none;
+      opacity: 0.65;
+    }
+  </style>
+</head>
+
+<body class="bg-dark-950 text-slate-300 font-sans selection:bg-hacker-green selection:text-dark-950 min-h-screen relative overflow-x-hidden">
+
+  <!-- Scanlines CRT Overlay (Ativável no Switch HUD) -->
+  <div id="crt-layer" class="crt-overlay"></div>
+
+  <!-- 3D Canvas de Fundo (Three.js Wireframe Cyber Grid & Data Particles) -->
+  <canvas id="three-canvas"></canvas>
+
+  <!-- BARRA DE STATUS HACKER MINIMALISTA SUPERIOR -->
+  <aside aria-label="Status do Sistema" class="relative z-50 bg-dark-950/90 border-b border-dark-borderSubtle text-[11px] font-mono text-slate-400 py-1.5 px-4 backdrop-blur-md">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <span class="inline-flex items-center gap-1.5 text-hacker-green font-semibold">
+          <span class="w-2 h-2 rounded-full bg-hacker-green animate-ping"></span>
+          SYS.STATUS: OPERATIONAL
+        </span>
+        <span class="text-slate-600 hidden sm:inline">|</span>
+        <span class="hidden sm:inline text-slate-400">NODE: PT-LISBON-SEC01</span>
+        <span class="text-slate-600 hidden md:inline">|</span>
+        <span class="hidden md:inline text-hacker-cyan">SECURITY LEVEL: ROOT</span>
+      </div>
+
+      <div class="flex items-center gap-4">
+        <!-- CRT Monitor Toggle -->
+        <button id="toggle-crt-btn" class="flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] bg-dark-850 hover:bg-dark-800 border border-dark-border text-slate-300 transition-colors" title="Alternar Modo CRT Retro">
+          <i data-lucide="tv" class="w-3 h-3 text-hacker-cyan"></i>
+          <span>CRT MODE: <span id="crt-status-text" class="text-slate-400">OFF</span></span>
+        </button>
+
+        <!-- 3D Background Toggle -->
+        <button id="toggle-3d-btn" class="flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] bg-dark-850 hover:bg-dark-800 border border-dark-border text-slate-300 transition-colors" title="Pausar/Ativar Render 3D">
+          <i data-lucide="box" class="w-3 h-3 text-hacker-green"></i>
+          <span>3D GRID: <span id="grid-status-text" class="text-hacker-green">ON</span></span>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- NAVBAR FLUTUANTE -->
+  <header class="sticky top-0 z-40 bg-dark-950/80 backdrop-blur-xl border-b border-dark-borderSubtle">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+      <a href="#home" class="flex items-center gap-2.5 font-mono text-base font-bold text-white group">
+        <div class="w-8 h-8 rounded-lg bg-dark-900 border border-dark-border flex items-center justify-center text-hacker-green group-hover:border-hacker-green transition-colors">
+          <i data-lucide="terminal" class="w-4 h-4"></i>
+        </div>
+        <span class="tracking-tight">alexandre<span class="text-hacker-green">.sec</span></span>
+      </a>
+
+      <!-- Desktop Links -->
+      <nav class="hidden md:flex items-center gap-7 text-xs font-mono font-medium text-slate-300">
+        <a href="#about" class="hover:text-hacker-green transition-colors flex items-center gap-1">
+          <span class="text-hacker-green">//</span> 01.Sobre
+        </a>
+        <a href="#skills" class="hover:text-hacker-green transition-colors flex items-center gap-1">
+          <span class="text-hacker-green">//</span> 02.Stack
+        </a>
+        <a href="#certificates" class="hover:text-hacker-green transition-colors flex items-center gap-1">
+          <span class="text-hacker-green">//</span> 03.Certificações
+          <span class="px-1.5 py-0.2 text-[9px] bg-hacker-green/20 text-hacker-green rounded border border-hacker-green/40">NOVO</span>
+        </a>
+        <a href="#projects" class="hover:text-hacker-green transition-colors flex items-center gap-1">
+          <span class="text-hacker-green">//</span> 04.Projetos
+        </a>
+        <a href="#terminal-section" class="hover:text-hacker-green transition-colors flex items-center gap-1">
+          <span class="text-hacker-green">//</span> 05.Terminal
+        </a>
+      </nav>
+
+      <!-- Actions -->
+      <div class="flex items-center gap-3">
+        <a href="#contact" class="relative group px-4 py-2 text-xs font-mono font-semibold rounded-lg bg-hacker-green text-dark-950 hover:bg-emerald-300 transition-all shadow-neon-sm flex items-center gap-1.5">
+          <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
+          <span>Falar Comigo</span>
+        </a>
+
+        <!-- Mobile Menu Button -->
+        <button id="mobile-menu-btn" class="md:hidden p-2 rounded-lg bg-dark-900 border border-dark-border text-slate-300">
+          <i data-lucide="menu" class="w-5 h-5"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile Dropdown -->
+    <div id="mobile-menu" class="hidden md:hidden border-b border-dark-border bg-dark-900/95 backdrop-blur-lg px-6 py-4 space-y-3 font-mono text-sm">
+      <a href="#about" class="block py-1 text-slate-300 hover:text-hacker-green">// 01. Sobre</a>
+      <a href="#skills" class="block py-1 text-slate-300 hover:text-hacker-green">// 02. Stack</a>
+      <a href="#certificates" class="block py-1 text-slate-300 hover:text-hacker-green">// 03. Certificações</a>
+      <a href="#projects" class="block py-1 text-slate-300 hover:text-hacker-green">// 04. Projetos</a>
+      <a href="#terminal-section" class="block py-1 text-slate-300 hover:text-hacker-green">// 05. Terminal</a>
+      <a href="#contact" class="block py-1 text-hacker-green font-bold">// 06. Contato & Contratação</a>
+    </div>
+  </header>
+
+  <main class="relative z-10 flex-grow">
+    
+    <!-- HERO SECTION COM ROSTO HUD 3D E TERMINAL INTELIGENTE -->
+    <section id="home" class="max-w-7xl mx-auto px-4 sm:px-6 pt-12 md:pt-20 pb-16">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+        
+        <!-- Coluna da Esquerda: Bio e Introdução -->
+        <div class="lg:col-span-7 space-y-6 text-left">
+          
+          <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-dark-900/90 border border-dark-border text-xs font-mono text-slate-300 backdrop-blur-md">
+            <span class="w-2 h-2 rounded-full bg-hacker-green animate-pulse"></span>
+            <span class="text-hacker-green font-semibold">TARGET:</span>
+            <span>Portugal & Europa (Remoto / Relocation)</span>
+          </div>
+
+          <h1 class="text-3xl sm:text-5xl lg:text-6xl font-extrabold text-white tracking-tight leading-tight">
+            Backend Seguro & <br class="hidden sm:inline">
+            <span class="text-transparent bg-clip-text bg-gradient-to-r from-hacker-green via-teal-300 to-hacker-cyan glitch-hover">
+              Offensive Security
+            </span>
+          </h1>
+
+          <p class="text-slate-400 text-base sm:text-lg font-normal leading-relaxed max-w-2xl">
+            Olá, eu sou o <strong class="text-white font-semibold">Alexandre</strong>. Engenheiro de software backend, pentester e especialista em segurança digital. Desenvolvo arquiteturas de alta resiliência e realizo auditorias ofensivas para antecipar e neutralizar vulnerabilidades críticas.
+          </p>
+
+          <!-- Badges de competência rápida -->
+          <div class="flex flex-wrap gap-2 pt-1 font-mono text-xs">
+            <span class="px-2.5 py-1 rounded-md bg-dark-900 border border-dark-border text-hacker-green flex items-center gap-1.5">
+              <i data-lucide="shield-alert" class="w-3.5 h-3.5"></i> Pentest & OWASP Top 10
+            </span>
+            <span class="px-2.5 py-1 rounded-md bg-dark-900 border border-dark-border text-hacker-cyan flex items-center gap-1.5">
+              <i data-lucide="server" class="w-3.5 h-3.5"></i> High Performance APIs
+            </span>
+            <span class="px-2.5 py-1 rounded-md bg-dark-900 border border-dark-border text-purple-400 flex items-center gap-1.5">
+              <i data-lucide="binary" class="w-3.5 h-3.5"></i> OSINT & Forense Digital
+            </span>
+          </div>
+
+          <!-- CTAs -->
+          <div class="flex flex-wrap items-center gap-4 pt-4">
+            <a href="#projects" class="px-6 py-3 rounded-lg bg-hacker-green text-dark-950 font-mono font-bold text-xs uppercase tracking-wider hover:bg-emerald-300 transition-all shadow-neon-green flex items-center gap-2">
+              <i data-lucide="folder-git-2" class="w-4 h-4"></i> Ver Projetos
+            </a>
+            <a href="#certificates" class="px-6 py-3 rounded-lg bg-dark-900 border border-dark-border text-white font-mono text-xs tracking-wider hover:border-hacker-cyan hover:text-hacker-cyan transition-all flex items-center gap-2">
+              <i data-lucide="award" class="w-4 h-4"></i> Certificações
+            </a>
+            <a href="https://github.com/AlexandreG3k" target="_blank" rel="noopener noreferrer" class="px-4 py-3 rounded-lg bg-dark-900/60 border border-dark-borderSubtle text-slate-400 hover:text-white hover:border-slate-500 transition-all flex items-center gap-2 text-xs font-mono">
+              <i data-lucide="github" class="w-4 h-4"></i> GitHub
+            </a>
+          </div>
+        </div>
+
+        <!-- Coluna da Direita: HUD BIOMÉTRICO 3D COM O ROSTO DO ALEXANDRE -->
+        <div class="lg:col-span-5 flex justify-center">
+          <div class="relative w-72 sm:w-80 h-72 sm:h-80 flex items-center justify-center tilt-card" id="avatar-3d-box">
+            
+            <!-- Anel HUD Exterior Giratório 1 -->
+            <div class="absolute inset-0 rounded-full border border-dashed border-hacker-green/30 hud-spin pointer-events-none"></div>
+
+            <!-- Anel HUD 2 com marcações de mira cibernética -->
+            <div class="absolute -inset-4 rounded-full border border-dark-border hud-spin-reverse pointer-events-none">
+              <!-- Pontos de Calibração -->
+              <span class="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[9px] font-mono text-hacker-green bg-dark-950 px-1">00° N</span>
+              <span class="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 text-[9px] font-mono text-hacker-cyan bg-dark-950 px-1">180° S</span>
+              <span class="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 text-[9px] font-mono text-slate-500 bg-dark-950 px-1">270° W</span>
+              <span class="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 text-[9px] font-mono text-slate-500 bg-dark-950 px-1">90° E</span>
+            </div>
+
+            <!-- Moldura Central do Rosto com cantoneiras cibernéticas -->
+            <div class="relative w-60 sm:w-64 h-60 sm:h-64 rounded-2xl overflow-hidden border-2 border-hacker-green/60 shadow-neon-green bg-dark-900 group">
+              
+              <!-- Imagem do Rosto do Alexandre -->
+              <img 
+                src="alexandre_face_clean.jpg" 
+                alt="Alexandre Gomes - Backend & Security Engineer" 
+                class="w-full h-full object-cover object-top filter contrast-105 group-hover:scale-105 transition-transform duration-500"
+              />
+
+              <!-- Linha Laser de Varredura Biométrica (Scan) -->
+              <div class="absolute left-0 right-0 h-1 bg-gradient-to-r from-transparent via-hacker-green to-transparent scan-line shadow-[0_0_15px_#00ff9d] pointer-events-none"></div>
+
+              <!-- Overlay HUD de Scanner -->
+              <div class="absolute inset-0 bg-gradient-to-t from-dark-950 via-transparent to-transparent opacity-60 pointer-events-none"></div>
+
+              <!-- Retículos de Canto -->
+              <div class="absolute top-2 left-2 w-3 h-3 border-t-2 border-l-2 border-hacker-green pointer-events-none"></div>
+              <div class="absolute top-2 right-2 w-3 h-3 border-t-2 border-r-2 border-hacker-green pointer-events-none"></div>
+              <div class="absolute bottom-2 left-2 w-3 h-2 border-b-2 border-l-2 border-hacker-green pointer-events-none"></div>
+              <div class="absolute bottom-2 right-2 w-3 h-2 border-b-2 border-r-2 border-hacker-green pointer-events-none"></div>
+
+              <!-- Badge inferior de Identificação -->
+              <div class="absolute bottom-2 inset-x-2 bg-dark-950/85 backdrop-blur-md border border-dark-border rounded px-2.5 py-1 flex items-center justify-between text-[10px] font-mono">
+                <span class="text-hacker-green font-bold flex items-center gap-1">
+                  <span class="w-1.5 h-1.5 rounded-full bg-hacker-green animate-ping"></span>
+                  MATCH: 100%
+                </span>
+                <span class="text-slate-300">ALEXANDRE.SEC</span>
+              </div>
+            </div>
+
+            <!-- Etiquetas Flutuantes do Perfil -->
+            <div class="absolute -top-3 -right-2 bg-dark-900/90 border border-hacker-cyan/50 text-hacker-cyan text-[10px] font-mono px-2 py-0.5 rounded shadow-neon-sm backdrop-blur-md">
+              [ROLE: SEC_ENGINEER]
+            </div>
+            <div class="absolute -bottom-3 -left-2 bg-dark-900/90 border border-hacker-green/50 text-hacker-green text-[10px] font-mono px-2 py-0.5 rounded shadow-neon-sm backdrop-blur-md">
+              [STATUS: EU_READY]
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- SEÇÃO DE CERTIFICAÇÕES & CREDENCIAIS (MODULAR E DINÂMICA) -->
+    <section id="certificates" class="max-w-7xl mx-auto px-4 sm:px-6 py-20 border-t border-dark-borderSubtle">
+      <div class="flex flex-col md:flex-row md:items-end justify-between mb-12">
+        <div>
+          <div class="flex items-center gap-2 text-xs font-mono text-hacker-green mb-2">
+            <i data-lucide="shield-check" class="w-4 h-4"></i>
+            <span>// CREDENCIAIS COMPROVADAS</span>
+          </div>
+          <h2 class="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
+            Certificações & Validações Técnicas
+          </h2>
+          <p class="text-slate-400 text-sm max-w-xl mt-2">
+            Qualificações oficiais em segurança ofensiva e inteligência artificial aplicada. Clique em qualquer credencial para inspecionar o certificado e código de autenticidade.
+          </p>
+        </div>
+
+        <!-- Indicador de Facilidade de Extensão -->
+        <div class="mt-4 md:mt-0 font-mono text-xs text-slate-500 bg-dark-900 border border-dark-border rounded-lg px-3 py-2 flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-hacker-cyan"></span>
+          <span>Arquitetura modular pronta para novos certificados</span>
+        </div>
+      </div>
+
+      <!-- Grid Modular de Certificados (Renderizado via JS ou HTML estático) -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="certificates-container">
+        
+        <!-- Certificado 1: Cibersegurança -->
+        <div class="tilt-card bg-dark-900/80 border border-dark-border rounded-xl overflow-hidden hover:border-hacker-green transition-all duration-300 flex flex-col justify-between group shadow-lg">
+          <div>
+            <!-- Header do Certificado -->
+            <div class="p-4 bg-dark-850/80 border-b border-dark-borderSubtle flex items-center justify-between">
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-hacker-green/10 text-hacker-green border border-hacker-green/30 text-[11px] font-mono">
+                <i data-lucide="shield-alert" class="w-3.5 h-3.5"></i> Cibersegurança
+              </span>
+              <span class="font-mono text-xs text-slate-400">37 Horas</span>
+            </div>
+
+            <!-- Imagem Preview com Zoom Trigger -->
+            <div class="relative overflow-hidden cursor-pointer bg-dark-950 aspect-[16/11]" onclick="openCertModal('Cibersegurança.png', 'Santander - Cibersegurança do Zero à prática', 'Santander & DIO', 'UXFIYOAI', '37 Horas')">
+              <img 
+                src="Cibersegurança.png" 
+                alt="Certificado Santander Cibersegurança" 
+                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 filter brightness-95 group-hover:brightness-110"
+              />
+              <div class="absolute inset-0 bg-dark-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">
+                <span class="px-3 py-1.5 rounded-lg bg-hacker-green text-dark-950 font-mono font-bold text-xs flex items-center gap-1.5 shadow-neon-sm">
+                  <i data-lucide="maximize-2" class="w-3.5 h-3.5"></i> Expandir Certificado
+                </span>
+              </div>
+            </div>
+
+            <!-- Informações -->
+            <div class="p-5 space-y-3">
+              <h3 class="text-lg font-bold text-white group-hover:text-hacker-green transition-colors">
+                Santander - Cibersegurança do Zero à prática
+              </h3>
+              <p class="text-xs text-slate-400 leading-relaxed font-sans">
+                Formação intensiva cobrindo fundamentos de segurança da informação, arquitetura de redes seguras, prevenção de ataques cibernéticos e práticas de pentest.
+              </p>
+            </div>
+          </div>
+
+          <!-- Footer da Credencial -->
+          <div class="p-5 pt-0">
+            <div class="border-t border-dark-borderSubtle pt-4 flex items-center justify-between text-xs font-mono">
+              <div>
+                <span class="text-slate-500 block text-[10px]">CÓDIGO DE AUTENTICIDADE:</span>
+                <span class="text-hacker-cyan font-bold tracking-wider">UXFIYOAI</span>
+              </div>
+              <button onclick="openCertModal('Cibersegurança.png', 'Santander - Cibersegurança do Zero à prática', 'Santander & DIO', 'UXFIYOAI', '37 Horas')" class="text-hacker-green hover:underline flex items-center gap-1">
+                Visualizar &rarr;
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Certificado 2: Assistente de IA -->
+        <div class="tilt-card bg-dark-900/80 border border-dark-border rounded-xl overflow-hidden hover:border-hacker-cyan transition-all duration-300 flex flex-col justify-between group shadow-lg">
+          <div>
+            <!-- Header do Certificado -->
+            <div class="p-4 bg-dark-850/80 border-b border-dark-borderSubtle flex items-center justify-between">
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-hacker-cyan/10 text-hacker-cyan border border-hacker-cyan/30 text-[11px] font-mono">
+                <i data-lucide="bot" class="w-3.5 h-3.5"></i> Inteligência Artificial
+              </span>
+              <span class="font-mono text-xs text-slate-400">20 Horas</span>
+            </div>
+
+            <!-- Imagem Preview com Zoom Trigger -->
+            <div class="relative overflow-hidden cursor-pointer bg-dark-950 aspect-[16/11]" onclick="openCertModal('Assistente.png', 'Santander - Crie seu Assistente de IA', 'Santander & DIO', 'E7LHQJQ7', '20 Horas')">
+              <img 
+                src="Assistente.png" 
+                alt="Certificado Santander Assistente de IA" 
+                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 filter brightness-95 group-hover:brightness-110"
+              />
+              <div class="absolute inset-0 bg-dark-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">
+                <span class="px-3 py-1.5 rounded-lg bg-hacker-cyan text-dark-950 font-mono font-bold text-xs flex items-center gap-1.5 shadow-neon-cyan">
+                  <i data-lucide="maximize-2" class="w-3.5 h-3.5"></i> Expandir Certificado
+                </span>
+              </div>
+            </div>
+
+            <!-- Informações -->
+            <div class="p-5 space-y-3">
+              <h3 class="text-lg font-bold text-white group-hover:text-hacker-cyan transition-colors">
+                Santander - Crie seu Assistente de IA
+              </h3>
+              <p class="text-xs text-slate-400 leading-relaxed font-sans">
+                Bootcamp de engenharia e integração de modelos de IA, agentes inteligentes, orquestração de prompts e desenvolvimento de automações modernas.
+              </p>
+            </div>
+          </div>
+
+          <!-- Footer da Credencial -->
+          <div class="p-5 pt-0">
+            <div class="border-t border-dark-borderSubtle pt-4 flex items-center justify-between text-xs font-mono">
+              <div>
+                <span class="text-slate-500 block text-[10px]">CÓDIGO DE AUTENTICIDADE:</span>
+                <span class="text-hacker-cyan font-bold tracking-wider">E7LHQJQ7</span>
+              </div>
+              <button onclick="openCertModal('Assistente.png', 'Santander - Crie seu Assistente de IA', 'Santander & DIO', 'E7LHQJQ7', '20 Horas')" class="text-hacker-cyan hover:underline flex items-center gap-1">
+                Visualizar &rarr;
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card de Próximas Certificações / Placeholder de Expansão Fácil -->
+        <div class="tilt-card bg-dark-900/40 border border-dashed border-dark-borderSubtle rounded-xl p-6 flex flex-col items-center justify-center text-center space-y-4 hover:border-hacker-green/50 transition-all duration-300">
+          <div class="w-14 h-14 rounded-full bg-dark-850 border border-dark-border flex items-center justify-center text-hacker-green">
+            <i data-lucide="plus-circle" class="w-7 h-7"></i>
+          </div>
+          <div>
+            <h4 class="text-base font-bold text-white mb-1">Novas Credenciais em Andamento</h4>
+            <p class="text-xs text-slate-400 max-w-xs mx-auto">
+              Constantemente aprimorando conhecimento com certificações internacionais em Cloud Security, CEH e arquiteturas backend.
+            </p>
+          </div>
+          <div class="font-mono text-[11px] text-hacker-green/80 bg-hacker-green/10 px-3 py-1 rounded border border-hacker-green/20">
+            + Adicionar mais pelo script modular
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- MODAL DE VISUALIZAÇÃO DE CERTIFICADO EM ALTA RESOLUÇÃO -->
+    <div id="cert-modal" class="fixed inset-0 z-50 bg-dark-950/90 backdrop-blur-md hidden flex items-center justify-center p-4">
+      <div class="relative max-w-4xl w-full bg-dark-900 border border-dark-border rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+        <!-- Barra de título do Modal -->
+        <div class="p-4 bg-dark-850 border-b border-dark-border flex items-center justify-between">
+          <div class="flex items-center gap-2 font-mono text-xs text-slate-300">
+            <i data-lucide="shield-check" class="w-4 h-4 text-hacker-green"></i>
+            <span id="modal-title" class="font-bold text-white">Visualizador de Certificado</span>
+          </div>
+          <button onclick="closeCertModal()" class="p-1 rounded bg-dark-800 hover:bg-dark-700 text-slate-400 hover:text-white transition-colors">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+
+        <!-- Imagem do Certificado -->
+        <div class="p-6 bg-dark-950 flex items-center justify-center overflow-auto max-h-[75vh]">
+          <img id="modal-img" src="" alt="Certificado" class="max-w-full h-auto rounded-lg shadow-xl border border-dark-borderSubtle">
+        </div>
+
+        <!-- Rodapé com Metadados -->
+        <div class="p-4 bg-dark-850 border-t border-dark-border flex flex-wrap items-center justify-between text-xs font-mono gap-3">
+          <div class="flex items-center gap-4">
+            <div>
+              <span class="text-slate-500 text-[10px]">EMISSOR:</span>
+              <span id="modal-issuer" class="text-slate-200 block"></span>
+            </div>
+            <div>
+              <span class="text-slate-500 text-[10px]">CARGA HORÁRIA:</span>
+              <span id="modal-hours" class="text-slate-200 block"></span>
+            </div>
+            <div>
+              <span class="text-slate-500 text-[10px]">CÓDIGO:</span>
+              <span id="modal-code" class="text-hacker-green font-bold block"></span>
+            </div>
+          </div>
+          <button onclick="closeCertModal()" class="px-4 py-1.5 rounded bg-dark-800 hover:bg-dark-700 text-slate-300 border border-dark-border transition-colors">
+            Fechar [ESC]
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ESPECIALIDADES & ARQUITETURA TÉCNICA -->
+    <section id="skills" class="max-w-7xl mx-auto px-4 sm:px-6 py-20">
+      <div class="text-center mb-14">
+        <h2 class="text-xs uppercase font-mono tracking-widest text-hacker-green mb-2">// CAPACIDADES OFENSIVAS & DEFENSIVAS</h2>
+        <h3 class="text-3xl sm:text-4xl font-extrabold text-white">Domínio Técnico de Ponta a Ponta</h3>
+        <p class="text-slate-400 text-sm max-w-xl mx-auto mt-2">Engenharia de software com segurança nativa incorporada em cada camada.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        
+        <!-- Backend Card -->
+        <div class="tilt-card bg-dark-900 border border-dark-border rounded-xl p-7 hover:border-hacker-green transition-all duration-300 shadow-lg">
+          <div class="w-12 h-12 rounded-lg bg-hacker-green/10 border border-hacker-green/30 flex items-center justify-center text-hacker-green mb-6 shadow-neon-sm">
+            <i data-lucide="server" class="w-6 h-6"></i>
+          </div>
+          <h4 class="text-xl font-bold text-white mb-2">Backend Engineering</h4>
+          <p class="text-slate-400 text-sm leading-relaxed mb-6">
+            Desenvolvimento de APIs robustas, microsserviços escaláveis e bancos de dados modelados para máxima integridade e proteção de dados.
+          </p>
+          <div class="space-y-2.5 font-mono text-xs text-slate-300 border-t border-dark-borderSubtle pt-5">
+            <div class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-hacker-green"></i> Python, FastAPI, Node.js / TypeScript</div>
+            <div class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-hacker-green"></i> PostgreSQL, MySQL, Redis, Cache Layer</div>
+            <div class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-hacker-green"></i> Docker, Conteinerização & CI/CD</div>
+            <div class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-hacker-green"></i> Autenticação segura (JWT, OAuth2, RBAC)</div>
+          </div>
+        </div>
+
+        <!-- Pentest Card -->
+        <div class="tilt-card bg-dark-900 border border-dark-border rounded-xl p-7 hover:border-hacker-cyan transition-all duration-300 shadow-lg">
+          <div class="w-12 h-12 rounded-lg bg-hacker-cyan/10 border border-hacker-cyan/30 flex items-center justify-center text-hacker-cyan mb-6 shadow-neon-cyan">
+            <i data-lucide="shield-alert" class="w-6 h-6"></i>
+          </div>
+          <h4 class="text-xl font-bold text-white mb-2">Pentest & AppSec</h4>
+          <p class="text-slate-400 text-sm leading-relaxed mb-6">
+            Simulação de ataques reais contra aplicações web, infraestruturas de rede e APIs. Provas de Conceito (PoCs) e mitigação antes do deploy.
+          </p>
+          <div class="space-y-2.5 font-mono text-xs text-slate-300 border-t border-dark-borderSubtle pt-5">
+            <div class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-hacker-cyan"></i> OWASP Top 10 Web & API Security</div>
+            <div class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-hacker-cyan"></i> Burp Suite, Nmap, Ffuf, Metasploit</div>
+            <div class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-hacker-cyan"></i> Análise estática & dinâmica de vulnerabilidades</div>
+            <div class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-hacker-cyan"></i> Relatórios executivos e planos de remediação</div>
+          </div>
+        </div>
+
+        <!-- Forensics & OSINT Card -->
+        <div class="tilt-card bg-dark-900 border border-dark-border rounded-xl p-7 hover:border-purple-400 transition-all duration-300 shadow-lg">
+          <div class="w-12 h-12 rounded-lg bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400 mb-6">
+            <i data-lucide="search" class="w-6 h-6"></i>
+          </div>
+          <h4 class="text-xl font-bold text-white mb-2">Investigação Digital & OSINT</h4>
+          <p class="text-slate-400 text-sm leading-relaxed mb-6">
+            Inteligência de fontes abertas (OSINT), análise forense de artefatos digitais, correlação de logs de incidentes e threat hunting preventivo.
+          </p>
+          <div class="space-y-2.5 font-mono text-xs text-slate-300 border-t border-dark-borderSubtle pt-5">
+            <div class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-purple-400"></i> Coleta e preservação de cadeia de custódia</div>
+            <div class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-purple-400"></i> Reconhecimento avançado de superfícies de ataque</div>
+            <div class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-purple-400"></i> Análise de cabeçalhos, metadados & logs</div>
+            <div class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-purple-400"></i> Apuração técnica de fraudes cibernéticas</div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- PROJETOS EM DESTAQUE COM EFEITO 3D -->
+    <section id="projects" class="max-w-7xl mx-auto px-4 sm:px-6 py-20 border-t border-dark-borderSubtle">
+      <div class="flex flex-col md:flex-row md:items-end justify-between mb-12">
+        <div>
+          <h2 class="text-xs uppercase font-mono tracking-widest text-hacker-green mb-2">// PROJETOS EM PRODUÇÃO</h2>
+          <h3 class="text-3xl sm:text-4xl font-extrabold text-white">Showcase Técnico no GitHub</h3>
+        </div>
+        <a href="https://github.com/AlexandreG3k" target="_blank" rel="noopener noreferrer" class="mt-4 md:mt-0 font-mono text-xs text-hacker-green hover:underline flex items-center gap-1.5">
+          Ver todos os repositórios @AlexandreG3k <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+        </a>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        
+        <!-- Project 1 -->
+        <div class="tilt-card bg-dark-900 border border-dark-border rounded-xl p-6 flex flex-col justify-between hover:border-slate-400 transition-all shadow-md">
+          <div>
+            <div class="flex items-center justify-between mb-4 text-xs font-mono">
+              <span class="px-2 py-0.5 rounded bg-hacker-green/10 text-hacker-green border border-hacker-green/30">
+                Backend / Security
+              </span>
+              <i data-lucide="lock" class="w-4 h-4 text-slate-500"></i>
+            </div>
+            <h4 class="text-lg font-bold text-white mb-2">Secure API Gateway & Auth Guard</h4>
+            <p class="text-slate-400 text-xs leading-relaxed mb-6">
+              Serviço de gateway com mitigação automática contra Brute Force, rate limiting distribuído com Redis, assinatura digital JWT com rotação de chaves e sanitização estrita.
+            </p>
+          </div>
+          <div>
+            <div class="flex flex-wrap gap-1.5 mb-5 text-[11px] font-mono text-slate-300">
+              <span class="px-2 py-0.5 rounded bg-dark-850 border border-dark-borderSubtle">Python</span>
+              <span class="px-2 py-0.5 rounded bg-dark-850 border border-dark-borderSubtle">PostgreSQL</span>
+              <span class="px-2 py-0.5 rounded bg-dark-850 border border-dark-borderSubtle">Docker</span>
+              <span class="px-2 py-0.5 rounded bg-dark-850 border border-dark-borderSubtle">Redis</span>
+            </div>
+            <a href="https://github.com/AlexandreG3k" target="_blank" class="text-xs font-mono text-hacker-green hover:underline inline-flex items-center gap-1">
+              Repositório no GitHub &rarr;
+            </a>
+          </div>
+        </div>
+
+        <!-- Project 2 -->
+        <div class="tilt-card bg-dark-900 border border-dark-border rounded-xl p-6 flex flex-col justify-between hover:border-slate-400 transition-all shadow-md">
+          <div>
+            <div class="flex items-center justify-between mb-4 text-xs font-mono">
+              <span class="px-2 py-0.5 rounded bg-hacker-cyan/10 text-hacker-cyan border border-hacker-cyan/30">
+                Tooling / Pentest
+              </span>
+              <i data-lucide="terminal" class="w-4 h-4 text-slate-500"></i>
+            </div>
+            <h4 class="text-lg font-bold text-white mb-2">Automated Recon & Vuln Scanner</h4>
+            <p class="text-slate-400 text-xs leading-relaxed mb-6">
+              Ferramenta CLI para reconhecimento automatizado de superfícies de ataque: enumeração de subdomínios, checagem de portas ativas e verificação de cabeçalhos de segurança ausentes.
+            </p>
+          </div>
+          <div>
+            <div class="flex flex-wrap gap-1.5 mb-5 text-[11px] font-mono text-slate-300">
+              <span class="px-2 py-0.5 rounded bg-dark-850 border border-dark-borderSubtle">Python</span>
+              <span class="px-2 py-0.5 rounded bg-dark-850 border border-dark-borderSubtle">Bash</span>
+              <span class="px-2 py-0.5 rounded bg-dark-850 border border-dark-borderSubtle">Nmap API</span>
+              <span class="px-2 py-0.5 rounded bg-dark-850 border border-dark-borderSubtle">AsyncIO</span>
+            </div>
+            <a href="https://github.com/AlexandreG3k" target="_blank" class="text-xs font-mono text-hacker-cyan hover:underline inline-flex items-center gap-1">
+              Repositório no GitHub &rarr;
+            </a>
+          </div>
+        </div>
+
+        <!-- Project 3 -->
+        <div class="tilt-card bg-dark-900 border border-dark-border rounded-xl p-6 flex flex-col justify-between hover:border-slate-400 transition-all shadow-md">
+          <div>
+            <div class="flex items-center justify-between mb-4 text-xs font-mono">
+              <span class="px-2 py-0.5 rounded bg-purple-500/10 text-purple-400 border border-purple-500/30">
+                OSINT / Forense
+              </span>
+              <i data-lucide="fingerprint" class="w-4 h-4 text-slate-500"></i>
+            </div>
+            <h4 class="text-lg font-bold text-white mb-2">OSINT Threat Intel Framework</h4>
+            <p class="text-slate-400 text-xs leading-relaxed mb-6">
+              Scripts especializados para correlação de metadados, verificação de pegadas digitais, análise de hashes de arquivos maliciosos e automação de coleta de evidências.
+            </p>
+          </div>
+          <div>
+            <div class="flex flex-wrap gap-1.5 mb-5 text-[11px] font-mono text-slate-300">
+              <span class="px-2 py-0.5 rounded bg-dark-850 border border-dark-borderSubtle">Python</span>
+              <span class="px-2 py-0.5 rounded bg-dark-850 border border-dark-borderSubtle">OSINT APIs</span>
+              <span class="px-2 py-0.5 rounded bg-dark-850 border border-dark-borderSubtle">Log Analysis</span>
+            </div>
+            <a href="https://github.com/AlexandreG3k" target="_blank" class="text-xs font-mono text-purple-400 hover:underline inline-flex items-center gap-1">
+              Repositório no GitHub &rarr;
+            </a>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- TERMINAL INTERATIVO HACKER REAL -->
+    <section id="terminal-section" class="max-w-4xl mx-auto px-4 sm:px-6 py-20">
+      <div class="text-center mb-8">
+        <h2 class="text-xs uppercase font-mono tracking-widest text-hacker-green mb-2">// CONSOLE INTERATIVO</h2>
+        <h3 class="text-2xl sm:text-3xl font-extrabold text-white">Execute Comandos Diretamente</h3>
+        <p class="text-slate-400 text-xs font-mono mt-1">Interaja com a CLI abaixo para explorar credenciais, projetos e status do sistema.</p>
+      </div>
+
+      <!-- Janela do Terminal -->
+      <div class="bg-dark-900 border border-dark-border rounded-xl shadow-2xl overflow-hidden font-mono text-xs sm:text-sm glow-accent">
+        <!-- Barra de Controles da Janela -->
+        <div class="bg-dark-850 px-4 py-3 border-b border-dark-border flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="w-3 h-3 rounded-full bg-red-500/80 inline-block cursor-pointer" onclick="runTermCommand('clear')"></span>
+            <span class="w-3 h-3 rounded-full bg-yellow-500/80 inline-block cursor-pointer"></span>
+            <span class="w-3 h-3 rounded-full bg-emerald-500/80 inline-block cursor-pointer"></span>
+            <span class="text-slate-400 text-xs ml-2">guest@alexandre-sec: ~</span>
+          </div>
+          <span class="text-slate-500 text-[11px]">zsh (interactive)</span>
+        </div>
+
+        <!-- Atalhos rápidos em botões -->
+        <div class="bg-dark-950/80 px-4 py-2 border-b border-dark-borderSubtle flex flex-wrap gap-2 text-[11px]">
+          <span class="text-slate-500 py-0.5">Comandos rápidos:</span>
+          <button onclick="runTermCommand('help')" class="px-2 py-0.5 rounded bg-dark-850 border border-dark-border text-hacker-green hover:bg-dark-800">help</button>
+          <button onclick="runTermCommand('certs')" class="px-2 py-0.5 rounded bg-dark-850 border border-dark-border text-hacker-cyan hover:bg-dark-800">certs</button>
+          <button onclick="runTermCommand('skills')" class="px-2 py-0.5 rounded bg-dark-850 border border-dark-border text-slate-300 hover:bg-dark-800">skills</button>
+          <button onclick="runTermCommand('projects')" class="px-2 py-0.5 rounded bg-dark-850 border border-dark-border text-slate-300 hover:bg-dark-800">projects</button>
+          <button onclick="runTermCommand('contact')" class="px-2 py-0.5 rounded bg-dark-850 border border-dark-border text-hacker-green hover:bg-dark-800">contact</button>
+          <button onclick="runTermCommand('clear')" class="px-2 py-0.5 rounded bg-dark-850 border border-dark-border text-slate-400 hover:bg-dark-800">clear</button>
+        </div>
+
+        <!-- Saída do Terminal -->
+        <div id="terminal-output" class="p-5 space-y-2 text-slate-300 max-h-80 overflow-y-auto leading-relaxed">
+          <p class="text-slate-500">// Bem-vindo ao shell interativo de Alexandre Gomes</p>
+          <p class="text-slate-500">// Digite <span class="text-hacker-green font-bold">help</span> para listar os comandos disponíveis.</p>
+          <p><span class="text-hacker-green">alexandre@sec:~$</span> whoami</p>
+          <p class="text-slate-400 pl-4">Alexandre Gomes | Backend Engineer, Pentester & Digital Forensics</p>
+          <p><span class="text-hacker-green">alexandre@sec:~$</span> target --region "Portugal & Europa"</p>
+          <p class="text-hacker-cyan pl-4">[+] Target: Portugal Tech Hub (Lisboa, Porto ou Remoto Europa) - Pronto para Relocation.</p>
+        </div>
+
+        <!-- Linha de Entrada de Comando -->
+        <div class="px-5 py-3 bg-dark-950 border-t border-dark-borderSubtle flex items-center gap-2">
+          <span class="text-hacker-green font-bold">alexandre@sec:~$</span>
+          <input 
+            type="text" 
+            id="terminal-input" 
+            placeholder="digite um comando (ex: help, certs, projects)..." 
+            class="bg-transparent border-none outline-none text-slate-200 flex-grow text-xs sm:text-sm font-mono placeholder-slate-600"
+            autocomplete="off"
+            spellcheck="false"
+          />
+        </div>
+      </div>
+    </section>
+
+    <!-- CONTATO & DISPONIBILIDADE -->
+    <section id="contact" class="max-w-4xl mx-auto px-4 sm:px-6 py-20 text-center">
+      <div class="tilt-card bg-gradient-to-b from-dark-900 to-dark-950 border border-dark-border rounded-2xl p-8 sm:p-12 shadow-neon-cyan relative overflow-hidden">
+        
+        <!-- Elemento decorativo cibernético de fundo -->
+        <div class="absolute -top-24 -right-24 w-48 h-48 bg-hacker-green/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute -bottom-24 -left-24 w-48 h-48 bg-hacker-cyan/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <span class="text-xs uppercase font-mono tracking-widest text-hacker-cyan mb-2 block">// DISPONIBILIDADE IMEDIATA</span>
+        <h3 class="text-3xl sm:text-5xl font-extrabold text-white mb-4 tracking-tight">
+          Vamos construir algo seguro e escalável?
+        </h3>
+        <p class="text-slate-400 text-sm sm:text-base max-w-xl mx-auto mb-8 font-normal leading-relaxed">
+          Aberto a oportunidades em regime remoto ou relocalização para <strong>Portugal e União Europeia</strong>, além de consultorias especializadas em backend seguro e testes de intrusão.
+        </p>
+
+        <div class="flex flex-wrap items-center justify-center gap-4">
+          <a href="mailto:seu-email@dominio.com" class="px-6 py-3 rounded-lg bg-hacker-green text-dark-950 font-mono font-bold text-xs uppercase tracking-wider hover:bg-emerald-300 transition-all shadow-neon-green flex items-center gap-2">
+            <i data-lucide="mail" class="w-4 h-4"></i> Enviar Mensagem por E-mail
+          </a>
+          <a href="https://linkedin.com/in/SEU_LINKEDIN" target="_blank" rel="noopener noreferrer" class="px-6 py-3 rounded-lg bg-dark-850 border border-dark-border text-white hover:border-hacker-cyan hover:text-hacker-cyan transition-all flex items-center gap-2 font-mono text-xs">
+            <i data-lucide="linkedin" class="w-4 h-4 text-hacker-cyan"></i> LinkedIn
+          </a>
+          <a href="https://github.com/AlexandreG3k" target="_blank" rel="noopener noreferrer" class="px-6 py-3 rounded-lg bg-dark-850 border border-dark-border text-white hover:border-hacker-green hover:text-hacker-green transition-all flex items-center gap-2 font-mono text-xs">
+            <i data-lucide="github" class="w-4 h-4 text-hacker-green"></i> GitHub
+          </a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="border-t border-dark-borderSubtle py-8 bg-dark-950 relative z-10 text-xs font-mono text-slate-500">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div>
+        &copy; <span id="current-year"></span> Alexandre Gomes (<span class="text-hacker-green">AlexandreG3k</span>). Todos os direitos reservados.
+      </div>
+      <div class="flex items-center gap-4 text-slate-400">
+        <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-hacker-green"></span> Secured by Design</span>
+        <span>•</span>
+        <span>Portugal / EU Ready</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ==========================================
+       SCRIPTS: THREE.JS 3D, TERMINAL & MODAL
+  =========================================== -->
+  <script>
+    // Inicializar ícones Lucide
+    lucide.createIcons();
+    document.getElementById('current-year').textContent = new Date().getFullYear();
+
+    // Menu Mobile Toggle
+    const mobileBtn = document.getElementById('mobile-menu-btn');
+    const mobileMenu = document.getElementById('mobile-menu');
+    mobileBtn.addEventListener('click', () => {
+      mobileMenu.classList.toggle('hidden');
+    });
+
+    /* ========================================================
+       GERENCIADOR DE CERTIFICADOS (MODAL & MODULARIDADE)
+       Aqui você pode adicionar mais certificados futuramente!
+       Basta duplicar um objeto no array abaixo:
+    ======================================================== */
+    const MY_CERTIFICATES = [
+      {
+        title: "Santander - Cibersegurança do Zero à prática",
+        issuer: "Santander & DIO",
+        hours: "37 Horas",
+        code: "UXFIYOAI",
+        image: "Cibersegurança.png",
+        category: "Cibersegurança"
+      },
+      {
+        title: "Santander - Crie seu Assistente de IA",
+        issuer: "Santander & DIO",
+        hours: "20 Horas",
+        code: "E7LHQJQ7",
+        image: "Assistente.png",
+        category: "Inteligência Artificial"
+      }
+      /* EXEMPLO PARA ADICIONAR MAIS CERTIFICADOS NO FUTURO:
+      ,
+      {
+        title: "Nome do Seu Novo Certificado",
+        issuer: "Instituição Emissora",
+        hours: "40 Horas",
+        code: "HASH12345",
+        image: "nome_do_arquivo.png",
+        category: "Backend / Cloud / Pentest"
+      }
+      */
+    ];
+
+    function openCertModal(imageSrc, title, issuer, code, hours) {
+      document.getElementById('modal-img').src = imageSrc;
+      document.getElementById('modal-title').textContent = title;
+      document.getElementById('modal-issuer').textContent = issuer;
+      document.getElementById('modal-code').textContent = code;
+      document.getElementById('modal-hours').textContent = hours;
+      document.getElementById('cert-modal').classList.remove('hidden');
+    }
+
+    function closeCertModal() {
+      document.getElementById('cert-modal').classList.add('hidden');
+    }
+
+    // Fechar modal ao pressionar ESC ou clicar fora
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeCertModal();
+    });
+    document.getElementById('cert-modal').addEventListener('click', (e) => {
+      if (e.target.id === 'cert-modal') closeCertModal();
+    });
+
+    /* ========================================================
+       EFEITO CRT VINTAGE HACKER TOGGLE
+    ======================================================== */
+    const crtBtn = document.getElementById('toggle-crt-btn');
+    const crtStatus = document.getElementById('crt-status-text');
+    let crtEnabled = false;
+
+    crtBtn.addEventListener('click', () => {
+      crtEnabled = !crtEnabled;
+      document.body.classList.toggle('crt-active', crtEnabled);
+      crtStatus.textContent = crtEnabled ? 'ON' : 'OFF';
+      crtStatus.className = crtEnabled ? 'text-hacker-green font-bold' : 'text-slate-400';
+    });
+
+    /* ========================================================
+       EFEITO 3D TILT REALISTA NOS CARDS
+    ======================================================== */
+    const tiltCards = document.querySelectorAll('.tilt-card');
+    tiltCards.forEach(card => {
+      card.addEventListener('mousemove', (e) => {
+        const rect = card.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const centerX = rect.width / 2;
+        const centerY = rect.height / 2;
+        const rotateX = ((y - centerY) / centerY) * -7;
+        const rotateY = ((x - centerX) / centerX) * 7;
+
+        card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.01, 1.01, 1.01)`;
+      });
+
+      card.addEventListener('mouseleave', () => {
+        card.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)';
+      });
+    });
+
+    /* ========================================================
+       TERMINAL INTERATIVO INTELIGENTE
+    ======================================================== */
+    const termInput = document.getElementById('terminal-input');
+    const termOutput = document.getElementById('terminal-output');
+
+    const commands = {
+      'help': `Comandos disponíveis:
+  <span class="text-hacker-green">whoami</span>     - Detalhes sobre Alexandre
+  <span class="text-hacker-cyan">certs</span>      - Lista de certificações concluídas
+  <span class="text-hacker-green">skills</span>     - Habilidades técnicas e ferramentas
+  <span class="text-slate-300">projects</span>   - Projetos em destaque no GitHub
+  <span class="text-hacker-green">contact</span>    - Informações de contato e contratação
+  <span class="text-purple-400">matrix</span>     - Ativa modo visual cibernético acelerado
+  <span class="text-slate-400">clear</span>      - Limpa o console`,
+
+      'whoami': `<span class="text-hacker-green">[+] Alexandre Gomes</span>
+Engenheiro Backend, Pentester & Investigador Forense Digital.
+Focado em sistemas resilientes, APIs seguras e identificação proativa de brechas.`,
+
+      'certs': `<span class="text-hacker-cyan">[+] CERTIFICAÇÕES RECONHECIDAS:</span>
+  1. <strong>Santander - Cibersegurança do Zero à prática</strong> (37h) [Hash: UXFIYOAI]
+  2. <strong>Santander - Crie seu Assistente de IA</strong> (20h) [Hash: E7LHQJQ7]
+Use a seção de certificações da página para inspecionar os diplomas em alta resolução.`,
+
+      'skills': `<span class="text-hacker-green">[+] CORE STACK:</span>
+  - Backend: Python, Node.js, TypeScript, PostgreSQL, Redis, Docker
+  - Pentest: OWASP Top 10, Burp Suite, Nmap, Ffuf, Metasploit, PoCs
+  - Forensics: OSINT, Análise de Metadados e Logs, Threat Hunting`,
+
+      'projects': `<span class="text-hacker-green">[+] PROJETOS EM DESTAQUE:</span>
+  1. Secure API Gateway & Auth Guard (Python/Redis/Docker)
+  2. Automated Recon & Vuln Scanner (CLI Tooling)
+  3. OSINT Threat Intel Framework
+Veja mais em: <a href="https://github.com/AlexandreG3k" target="_blank" class="text-hacker-cyan underline">github.com/AlexandreG3k</a>`,
+
+      'contact': `<span class="text-hacker-green">[+] CANAIS DE CONTATO:</span>
+  - GitHub: https://github.com/AlexandreG3k
+  - LinkedIn: https://linkedin.com/in/SEU_LINKEDIN
+  - Target: Portugal & Europa (Remoto / Relocation)`,
+
+      'clear': 'CLEAR_SIGNAL'
+    };
+
+    function runTermCommand(cmdText) {
+      const cleanCmd = cmdText.trim().toLowerCase();
+      if (!cleanCmd) return;
+
+      if (cleanCmd === 'clear') {
+        termOutput.innerHTML = '';
+        return;
+      }
+
+      // Adicionar linha de comando inserida
+      const userLine = document.createElement('p');
+      userLine.innerHTML = `<span class="text-hacker-green">alexandre@sec:~$</span> ${cmdText}`;
+      termOutput.appendChild(userLine);
+
+      // Resposta
+      const respLine = document.createElement('div');
+      respLine.className = 'pl-4 text-xs';
+
+      if (cleanCmd === 'matrix') {
+        respLine.innerHTML = `<span class="text-hacker-green">[+] Matrix mode overclocked! Aceleração da malha 3D em execução.</span>`;
+        if (window.cyberSpeed) window.cyberSpeed = 0.035;
+      } else if (cleanCmd.startsWith('sudo')) {
+        respLine.innerHTML = `<span class="text-red-400">[!] Access Denied: Alexandre's defensive countermeasures are active. Nice try!</span>`;
+      } else if (commands[cleanCmd]) {
+        respLine.innerHTML = commands[cleanCmd];
+        if (cleanCmd === 'certs') {
+          // Rola suavemente até os certificados
+          document.getElementById('certificates').scrollIntoView({ behavior: 'smooth' });
+        }
+      } else {
+        respLine.innerHTML = `<span class="text-red-400">comando não reconhecido: '${cleanCmd}'. Digite <strong class="text-hacker-green">help</strong> para lista de comandos.</span>`;
+      }
+
+      termOutput.appendChild(respLine);
+      termOutput.scrollTop = termOutput.scrollHeight;
+    }
+
+    termInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        runTermCommand(termInput.value);
+        termInput.value = '';
+      }
+    });
+
+    /* ========================================================
+       THREE.JS 3D BACKGROUND (MALHA CIBERNÉTICA & DADOS VIVOS)
+    ======================================================== */
+    let scene, camera, renderer, plane, particles;
+    let is3dActive = true;
+    window.cyberSpeed = 0.008;
+
+    function initThree() {
+      const canvas = document.getElementById('three-canvas');
+      scene = new THREE.Scene();
+
+      camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+      camera.position.set(0, 14, 25);
+      camera.lookAt(0, 0, 0);
+
+      renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+      // Malha Topográfica Cyberpunk Wireframe
+      const planeGeo = new THREE.PlaneGeometry(80, 80, 48, 48);
+      const planeMat = new THREE.MeshBasicMaterial({
+        color: 0x00ff9d,
+        wireframe: true,
+        transparent: true,
+        opacity: 0.22
+      });
+
+      plane = new THREE.Mesh(planeGeo, planeMat);
+      plane.rotation.x = -Math.PI / 2.2;
+      plane.position.y = -6;
+      scene.add(plane);
+
+      // Partículas Flutuantes de Dados Ciber
+      const particleGeo = new THREE.BufferGeometry();
+      const count = 350;
+      const posArray = new Float32Array(count * 3);
+
+      for (let i = 0; i < count * 3; i += 3) {
+        posArray[i] = (Math.random() - 0.5) * 70;
+        posArray[i + 1] = Math.random() * 25 - 5;
+        posArray[i + 2] = (Math.random() - 0.5) * 70;
+      }
+
+      particleGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+      const particleMat = new THREE.PointsMaterial({
+        size: 0.15,
+        color: 0x00f0ff,
+        transparent: true,
+        opacity: 0.6
+      });
+
+      particles = new THREE.Points(particleGeo, particleMat);
+      scene.add(particles);
+
+      // Interação de Mouse Parallax
+      let mouseX = 0, mouseY = 0;
+      window.addEventListener('mousemove', (e) => {
+        mouseX = (e.clientX / window.innerWidth) - 0.5;
+        mouseY = (e.clientY / window.innerHeight) - 0.5;
+      });
+
+      // Animação Contínua
+      let clock = new THREE.Clock();
+
+      function animate() {
+        requestAnimationFrame(animate);
+        if (!is3dActive) return;
+
+        const elapsedTime = clock.getElapsedTime();
+
+        // Ondulação suave da malha topográfica (efeito terreno de dados)
+        const position = plane.geometry.attributes.position;
+        for (let i = 0; i < position.count; i++) {
+          const u = position.getX(i);
+          const v = position.getY(i);
+          const z = Math.sin(u * 0.2 + elapsedTime * 1.5) * Math.cos(v * 0.2 + elapsedTime * 1.5) * 1.2;
+          position.setZ(i, z);
+        }
+        plane.geometry.attributes.position.needsUpdate = true;
+
+        // Rotação sutil das partículas
+        particles.rotation.y = elapsedTime * 0.05;
+
+        // Parallax da câmera reagindo ao cursor
+        camera.position.x += (mouseX * 5 - camera.position.x) * 0.05;
+        camera.position.y += (14 - mouseY * 3 - camera.position.y) * 0.05;
+        camera.lookAt(0, 0, 0);
+
+        renderer.render(scene, camera);
+      }
+
+      animate();
+
+      // Redimensionamento
+      window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+    }
+
+    // Inicializa Three.js após o carregamento da página
+    window.addEventListener('DOMContentLoaded', initThree);
+
+    // Toggle do 3D Grid
+    const toggle3dBtn = document.getElementById('toggle-3d-btn');
+    const gridStatus = document.getElementById('grid-status-text');
+
+    toggle3dBtn.addEventListener('click', () => {
+      is3dActive = !is3dActive;
+      const canvas = document.getElementById('three-canvas');
+      canvas.style.display = is3dActive ? 'block' : 'none';
+      gridStatus.textContent = is3dActive ? 'ON' : 'OFF';
+      gridStatus.className = is3dActive ? 'text-hacker-green' : 'text-slate-500';
+    });
+  </script>
+</body>
+</html>
